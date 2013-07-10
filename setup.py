@@ -46,7 +46,7 @@ setup(name='collective.transcode.daemon',
       zip_safe=False,
       install_requires=[
           # -*- Extra requirements: -*-
-          'pycrypto',
+          'pycrypto==2.4.1',
           'Twisted',
           'pyasn1',
       ],
