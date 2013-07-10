@@ -28,21 +28,23 @@ Based on Darksnow ConvertDaemon by Jean-Nicolas Bès <jean.nicolas.bes@darksnow.
 #
 
 
-import time, os, fcntl, signal, socket
+import time
+import os
+import fcntl
+import signal
 from hashlib import sha1 as sha
 from Queue import Queue
-import urllib
 from urlparse import urlparse
 
 from twisted.internet import reactor
 from twisted.python import threadable, failure
 threadable.init(1)
 from twisted.internet.defer import Deferred
-import sys, datetime, tempfile
 from subprocess import Popen, PIPE, STDOUT
 
 IDLE_CYCLES_LIMIT = 30
 SLEEP_CYCLE = 4
+
 
 def getDuration(lines):
     """ Get the original file's duration by parsing ffmpeg transcode job output"""
@@ -51,6 +53,7 @@ def getDuration(lines):
             duration = line[line.find('Duration:'):].split(',')[0].split(':')[1:]
             return int(duration[0])*3600+int(duration[1])*60+int(float(duration[2]))
     return 0
+
 
 def getComplete(lines, duration):
     """ Get ffmpeg transcoding job completion progress, given the duration """
@@ -64,42 +67,42 @@ def getComplete(lines, duration):
 
 
 class Job(dict):
-    def __init__(self, input, output, profile, options, **kwargs):
+    def __init__(self, data, output, profile, options, **kwargs):
         dict.__init__(self)
-        self.input = input
+        self.input = data
         self.output = output
         self.options = options
         self.profile = profile
         self.defer = Deferred()
         self.duration = 0
-        self.complete = 0        
-        for key,value in kwargs.items():
-            self[key] = value
+        self.complete = 0
+        self.update(kwargs)
 
         # basic filename checking
-        input['path'] = input['path'].replace(' ', '-')
-        input['path'] = input['path'].replace('%20', '-')
-        input['path'] = input['path'].replace('%23', '#')
-        input['path'] = input['path'].replace('"', '')
-        input['fileName'] = input['fileName'].replace(' ', '-')
-        input['fileName'] = input['fileName'].replace('%20', '-')
-        input['fileName'] = input['fileName'].replace('%23', '#')
-        input['fileName'] = input['fileName'].replace('"', '')
+        data['path'] = data['path'].replace(' ', '-')
+        data['path'] = data['path'].replace('%20', '-')
+        data['path'] = data['path'].replace('%23', '#')
+        data['path'] = data['path'].replace('"', '')
+        data['fileName'] = data['fileName'].replace(' ', '-')
+        data['fileName'] = data['fileName'].replace('%20', '-')
+        data['fileName'] = data['fileName'].replace('%23', '#')
+        data['fileName'] = data['fileName'].replace('"', '')
 
         #This cleans up unsavoury characters from the path name. A video coming
         #from a URL such as https://local-server:9080/plone/foo/bar will
         #get stored in a directory .../https/local-server/9080/plone/foo/bar/...
         parsedURL = urlparse(self.input['path'])
         hostport = '/'.join(parsedURL[1].split(':'))
-        if input['fieldName']:
-            field = '%s/' % input['fieldName']
+        if data['fieldName']:
+            field = '%s/' % data['fieldName']
         else:
             field = ''
-        path = self['videofolder'] + '/' + \
-                parsedURL[0] + '/' + \
-                hostport + \
-                parsedURL[2] + '/' + \
-                field + self.profile['id']
+        path = '/'.join([
+            self['videofolder'],
+            parsedURL[0],
+            hostport + parsedURL[2],
+            field + self.profile['id'],
+        ])
         try:
             os.umask(0)
             os.makedirs(path)
@@ -107,10 +110,13 @@ class Job(dict):
             pass
 
         #grabs the basename of the file
-        fileName = input.get('fileName', None) or input['path'].split('/')[-1]
+        fileName = data.get('fileName', None) or data['path'].split('/')[-1]
         basename = '.'.join(fileName.split('.')[:-1]) or fileName
         outFile = path + '/' + basename + '.' + profile['output_extension']
-        self.output = dict(path = outFile, type = profile['output_mime_type'])
+        self.output = dict(
+            path=outFile,
+            type=profile['output_mime_type']
+        )
                 
     def __repr__(self):
         return "<Job input=%r ouput=%r options=%r %s" % (
@@ -119,6 +125,7 @@ class Job(dict):
             self.options,
             dict.__repr__(self),
         )
+
 
 class JobSched:
   
@@ -129,7 +136,7 @@ class JobSched:
     def genUJId(self):
         return sha(str(time.time())).digest()
     
-    def addjob(self,job):
+    def addjob(self, job):
         UJId = self.genUJId()
         self.job[UJId] = job
         job.UJId = UJId
