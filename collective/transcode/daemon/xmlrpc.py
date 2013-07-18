@@ -151,13 +151,22 @@ class XMLRPCConvert(xmlrpc.XMLRPC):
                                  job.profile['id'],
                                  ret)
         cbUrl = job['callbackURL']
-
-        if ret.__class__ is str:
-            vals = ret.split()
-            path = vals[0] == 'SUCCESS' and vals[1] or ''
+        if job.output.get('status') == 'SUCCESS':
+            ret = 'SUCCESS'
+            path = job.output['path']
         else:
             path = ''
-            ret = ret.getErrorMessage()
+            # XXX 2013-07-18: this line introduce a more than weird behavior.
+            # On FTP uploads (that make start transcode requests) the line below
+            # truncate the execution of this `callback` method. The excution stops
+            # precisely at this line no matter what and you end up with no call to 
+            # plumi callback. This leads to outdated transcode status on plone side
+            # but with transcoded video available (100% of progress for every profile).
+            
+            # ret = ret.getErrorMessage()
+
+            # nevertheless we should find something better here
+            ret = 'ERROR SOMEWHERE'
 
         key = {
             'jobId': job.UJId,
@@ -169,6 +178,7 @@ class XMLRPCConvert(xmlrpc.XMLRPC):
         }
         encoded_key = b64encode(encrypt(str(key), self.master.config['secret']))
         output = {'key': encoded_key}
+
         if cbUrl:
             if not cbUrl.endswith('/'):
                 cbUrl += '/'

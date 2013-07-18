@@ -219,11 +219,16 @@ class JobSched:
             if ret == 0: 
                 retPath = job.output['path']
                 if job['callbackURL']:
+                    job.output['status'] = 'SUCCESS'
+                    # we should pass status message into job output dict
                     reactor.callFromThread(job.defer.callback, 'SUCCESS ' + 
                                            retPath)
                 else:
+                    job.output['status'] = 'SUCCESS'
                     job.defer.callback('SUCCESS ' + retPath)
             else:
+                # we should pass error message into job output dict
+                # and adjust callback method accordingly
                 if job['callbackURL']:
                     reactor.callFromThread(job.defer.errback, 
                                            failure.Failure(Exception(errorMessage)))
