@@ -88,8 +88,6 @@ class XMLRPCConvert(xmlrpc.XMLRPC):
                                             profileId,
                                             profile['supported_mime_types'])
         output = {}
-        print 'job init !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-        print data, output, profile
         job = Job(data, output, profile,
                   options, callbackURL=callbackURL,
                   videofolder=self.master.config['videofolder'],
