@@ -1,10 +1,10 @@
 Introduction
 ============
-collective.transcode.daemon is an XML-RPC daemon servicing requests for 
-transcoding jobs. 
+collective.transcode.daemon is an XML-RPC daemon servicing requests for
+transcoding jobs.
 
-It was initially developed during the Plone Video Sprint that took place 
-right after the Plone Conference 2009 in Budapest. It was based on the 
+It was initially developed during the Plone Video Sprint that took place
+right after the Plone Conference 2009 in Budapest. It was based on the
 darksnow.convertdaemon code but has evolved a lot since
 
 - https://svn.atreal.net/public/svn.darksnow.org/ConvertDaemon
@@ -59,11 +59,17 @@ You can edit the following options in buildout.cfg:
         relative path of folder where transcoded videos are stored
 
     secret
-        a secret shared key used for authentication and encryption 
+        a secret shared key used for authentication and encryption
 
     profiles
         a python list of dicts specifying the supported transcoding profiles
- 
+
+    override_callback_url
+        an URL used to call back the plone instance.
+        Useful when you do transcoding request from http://your.domain.com
+        but you want the callback action to call the plone instance
+        on the same network, like: http://192.168.1.10:8080/Plone.
+
 Don't forget to run ./bin/buildout after editing buildout.cfg
 
 You can also customize the transcoding scripts inside the scripts directory.
