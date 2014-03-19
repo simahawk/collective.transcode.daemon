@@ -3,7 +3,7 @@
 """
 xmlrpc.py
 
-Created by unweb.me <we@unweb.me>. on 2009-11-02. 
+Created by unweb.me <we@unweb.me>. on 2009-11-02.
 Based on Darksnow ConvertDaemon by Jean-Nicolas Bès <jean.nicolas.bes@darksnow.org>
 Copyright (c) 2009 unweb.me
 
@@ -159,10 +159,10 @@ class XMLRPCConvert(xmlrpc.XMLRPC):
             # XXX 2013-07-18: this line introduce a more than weird behavior.
             # On FTP uploads (that make start transcode requests) the line below
             # truncate the execution of this `callback` method. The excution stops
-            # precisely at this line no matter what and you end up with no call to 
+            # precisely at this line no matter what and you end up with no call to
             # plumi callback. This leads to outdated transcode status on plone side
             # but with transcoded video available (100% of progress for every profile).
-            
+
             # ret = ret.getErrorMessage()
 
             # nevertheless we should find something better here
@@ -178,6 +178,12 @@ class XMLRPCConvert(xmlrpc.XMLRPC):
         }
         encoded_key = b64encode(encrypt(str(key), self.master.config['secret']))
         output = {'key': encoded_key}
+
+        overridden = self.master.config['override_callback_url']
+        if overridden:
+            print 'GOT OVERRIDDEN CALLBACK URL'
+            print overridden
+            cbUrl = overridden
 
         if cbUrl:
             if not cbUrl.endswith('/'):
