@@ -2,7 +2,7 @@ listen_host='localhost'
 listen_port='8888'
 videofolder='videos'
 secret='1771d99931264d538e75eeb19da7d6a0'
-
+override_callback_url = ''
 default_supported_mimetypes = ['application/ogg',
                                 'video/ogg',
                                 'video/x-ogg',
